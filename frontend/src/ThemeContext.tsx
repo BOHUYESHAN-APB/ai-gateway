@@ -46,14 +46,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return systemDark
   }, [themeMode, systemDark])
 
-  useEffect(() => {
-    const expected = isDark ? 'dark-mode' : 'light-mode'
-    const bg = isDark ? '#0a0a0a' : '#f1f5f9'
-    document.documentElement.className = expected
-    document.documentElement.style.background = bg
-    document.body.style.background = bg
-  }, [isDark])
-
   const setThemeMode = (m: ThemeMode) => {
     setThemeModeState(m)
     localStorage.setItem('theme', m)

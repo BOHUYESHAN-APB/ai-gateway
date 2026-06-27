@@ -1,43 +1,32 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { MantineProvider, createTheme } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import { HashRouter } from 'react-router-dom'
-import { ConfigProvider, theme as antTheme } from 'antd'
-import zhCN from 'antd/locale/zh_CN'
-import enUS from 'antd/locale/en_US'
 import { AppProvider, useAppContext } from './ThemeContext'
 import App from './App'
 import { initConfig } from './api'
+import '@mantine/core/styles.css'
+import '@mantine/notifications/styles.css'
+import './main.css'
 
-// Initialize API config (detect Tauri backend port)
 initConfig()
 
+const theme = createTheme({ primaryColor: 'blue', defaultRadius: 'md' })
+
 function ThemedApp() {
-  const { isDark, locale } = useAppContext()
+  const { isDark } = useAppContext()
   return (
-    <ConfigProvider
-      locale={locale === 'zh' ? zhCN : enUS}
-      theme={{
-        algorithm: isDark ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
-        token: { colorPrimary: '#1677ff', borderRadius: 6 },
-        ...(isDark ? {
-          components: {
-            Layout: { colorBgBody: '#141414', colorBgLayout: '#000', colorBgContainer: '#1f1f1f', colorBgElevated: '#262626' },
-            Menu: { colorBgContainer: '#1f1f1f', colorItemBgSelected: '#111d2c' },
-          },
-        } : {}),
-      }}
-    >
+    <MantineProvider theme={theme} forceColorScheme={isDark ? 'dark' : 'light'}>
+      <Notifications position="top-right" />
       <HashRouter>
         <App />
       </HashRouter>
-    </ConfigProvider>
+    </MantineProvider>
   )
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AppProvider>
-      <ThemedApp />
-    </AppProvider>
-  </React.StrictMode>,
+  <AppProvider>
+    <ThemedApp />
+  </AppProvider>,
 )

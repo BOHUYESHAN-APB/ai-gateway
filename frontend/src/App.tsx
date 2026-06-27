@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { ConfigProvider, Layout, Typography, Dropdown, Button, Tooltip, Modal, Divider } from 'antd'
+import { useState } from 'react'
+import { AppShell, Group, Burger, ActionIcon, Menu, Modal, Text, Code, Title, Divider, Button, Anchor } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import {
-  DashboardOutlined, CloudServerOutlined, ApiOutlined,
-  SunOutlined, MoonOutlined, DesktopOutlined, GlobalOutlined,
-  BookOutlined, SettingOutlined, GithubOutlined, KeyOutlined,
-} from '@ant-design/icons'
+  IconDashboard, IconCloudShare, IconApi, IconKey,
+  IconSun, IconMoon, IconDeviceDesktop, IconBook,
+  IconSettings, IconBrandGithub, IconLanguage,
+} from '@tabler/icons-react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Platforms from './pages/Platforms'
@@ -13,160 +14,129 @@ import ApiKeys from './pages/ApiKeys'
 import Settings from './pages/Settings'
 import { useAppContext } from './ThemeContext'
 import { t, type Locale, type ThemeMode, type TranslationKey } from './i18n'
-import { lightTheme, darkTheme } from './theme'
-import './styles.css'
 
-const { Content } = Layout
-const { Text } = Typography
-
-const TAB_ITEMS = [
-  { key: '/', icon: <DashboardOutlined />, label: 'dashboard', color: '#2563eb' },
-  { key: '/platforms', icon: <CloudServerOutlined />, label: 'platforms', color: '#7c3aed' },
-  { key: '/proxies', icon: <ApiOutlined />, label: 'proxies', color: '#db2777' },
-  { key: '/api-keys', icon: <KeyOutlined />, label: 'apiKeys', color: '#d97706' },
-  { key: '/settings', icon: <SettingOutlined />, label: 'settings', color: '#64748b' },
+const NAV_ITEMS = [
+  { key: '/', icon: IconDashboard, label: 'dashboard' as TranslationKey, color: '#2563eb' },
+  { key: '/platforms', icon: IconCloudShare, label: 'platforms' as TranslationKey, color: '#7c3aed' },
+  { key: '/proxies', icon: IconApi, label: 'proxies' as TranslationKey, color: '#db2777' },
+  { key: '/api-keys', icon: IconKey, label: 'apiKeys' as TranslationKey, color: '#d97706' },
+  { key: '/settings', icon: IconSettings, label: 'settings' as TranslationKey, color: '#64748b' },
 ]
 
 export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { themeMode, setThemeMode, isDark, locale, setLocale } = useAppContext()
-
-  const themeIcon = themeMode === 'dark' ? <MoonOutlined /> : themeMode === 'light' ? <SunOutlined /> : <DesktopOutlined />
-  const [docOpen, setDocOpen] = useState(false)
-
-  const activeIndex = TAB_ITEMS.findIndex(item => item.key === location.pathname)
+  const { themeMode, setThemeMode, locale, setLocale } = useAppContext()
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure()
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure()
+  const [docOpen, { open: openDoc, close: closeDoc }] = useDisclosure(false)
 
   return (
-    <ConfigProvider theme={isDark ? darkTheme : lightTheme}>
-      <Layout>
-        <div className="app-header">
-          <div className="app-header-inner">
-            <div className="app-header-left">
-              <img src="./logo.png" alt="" className="app-logo" />
-              <div className="app-brand">
-                <div className="app-title">AI Gateway</div>
-                <div className="app-subtitle">v1.2.1</div>
-              </div>
-            </div>
+    <AppShell
+      header={{ height: 52 }}
+      navbar={{ width: 200, breakpoint: 'sm', collapsed: { mobile: !mobileOpened, desktop: !desktopOpened } }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Group h="100%" px="md" justify="space-between">
+          <Group>
+            <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+            <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
+            <Group gap={6} onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+              <img src="./logo.png" alt="" style={{ height: 28 }} />
+              <Text fw={700} size="lg">AI Gateway</Text>
+              <Text size="xs" c="dimmed">v1.2.3</Text>
+            </Group>
+          </Group>
+          <Group gap={4}>
+            <ActionIcon variant="subtle" size="lg" onClick={openDoc} title={t(locale, 'documentation')}>
+              <IconBook size={18} />
+            </ActionIcon>
+            <Menu shadow="md" width={160}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" size="lg">
+                  {themeMode === 'dark' ? <IconMoon size={18} /> : themeMode === 'light' ? <IconSun size={18} /> : <IconDeviceDesktop size={18} />}
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconSun size={14} />} disabled={themeMode === 'light'} onClick={() => setThemeMode('light')}>{t(locale, 'themeLight')}</Menu.Item>
+                <Menu.Item leftSection={<IconMoon size={14} />} disabled={themeMode === 'dark'} onClick={() => setThemeMode('dark')}>{t(locale, 'themeDark')}</Menu.Item>
+                <Menu.Item leftSection={<IconDeviceDesktop size={14} />} disabled={themeMode === 'system'} onClick={() => setThemeMode('system')}>{t(locale, 'themeSystem')}</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+            <Menu shadow="md" width={120}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" size="lg">
+                  <IconLanguage size={18} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item disabled={locale === 'zh'} onClick={() => setLocale('zh')}>中文</Menu.Item>
+                <Menu.Item disabled={locale === 'en'} onClick={() => setLocale('en')}>EN</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+            <Anchor href="https://github.com/keiskeies/ai-gateway" target="_blank">
+              <ActionIcon variant="subtle" size="lg">
+                <IconBrandGithub size={18} />
+              </ActionIcon>
+            </Anchor>
+          </Group>
+        </Group>
+      </AppShell.Header>
 
-            <nav className="app-nav">
-              {TAB_ITEMS.map(item => {
-                const isActive = location.pathname === item.key
-                return (
-                  <button
-                    key={item.key}
-                    className={`app-nav-item ${isActive ? 'active' : ''}`}
-                    onClick={() => navigate(item.key)}
-                    style={{
-                      '--nav-color': item.color,
-                      color: isActive ? item.color : undefined,
-                    } as React.CSSProperties}
-                  >
-                    <span className="app-nav-icon" style={{ color: isActive ? item.color : item.color + '99' }}>{item.icon}</span>
-                    <span className="app-nav-label">{t(locale, item.label as TranslationKey)}</span>
-                  </button>
-                )
-              })}
-            </nav>
+      <AppShell.Navbar p="xs">
+        {NAV_ITEMS.map(item => {
+          const active = location.pathname === item.key
+          return (
+            <Button
+              key={item.key}
+              variant={active ? 'light' : 'subtle'}
+              color={item.color}
+              fullWidth
+              justify="flex-start"
+              leftSection={<item.icon size={18} />}
+              onClick={() => { navigate(item.key); toggleMobile() }}
+              style={{ fontWeight: active ? 600 : 400 }}
+              mb={4}
+            >
+              {t(locale, item.label)}
+            </Button>
+          )
+        })}
+      </AppShell.Navbar>
 
-            <div className="app-header-right">
-              <Tooltip title={t(locale, 'documentation')} placement="bottom">
-                <button className="app-action-btn" onClick={() => setDocOpen(true)}>
-                  <BookOutlined />
-                </button>
-              </Tooltip>
-              <Dropdown menu={{
-                items: [
-                  { key: 'light', icon: <SunOutlined />, label: t(locale, 'themeLight'), disabled: themeMode === 'light' },
-                  { key: 'dark', icon: <MoonOutlined />, label: t(locale, 'themeDark'), disabled: themeMode === 'dark' },
-                  { key: 'system', icon: <DesktopOutlined />, label: t(locale, 'themeSystem'), disabled: themeMode === 'system' },
-                ],
-                onClick: ({ key }) => setThemeMode(key as ThemeMode),
-              }}>
-                <button className="app-action-btn">
-                  {themeIcon}
-                </button>
-              </Dropdown>
-              <Dropdown menu={{
-                items: [
-                  { key: 'zh', label: '中文', disabled: locale === 'zh' },
-                  { key: 'en', label: 'EN', disabled: locale === 'en' },
-                ],
-                onClick: ({ key }) => setLocale(key as Locale),
-              }}>
-                <button className="app-action-btn">
-                  <GlobalOutlined />
-                </button>
-              </Dropdown>
-            <Tooltip title="GitHub" placement="bottom">
-              <button className="app-action-btn" onClick={() => window.open('https://github.com/keiskeies/ai-gateway', '_blank')}>
-                <GithubOutlined />
-              </button>
-            </Tooltip>
-          </div>
-          </div>
-        </div>
+      <AppShell.Main>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/platforms" element={<Platforms />} />
+          <Route path="/proxies" element={<Proxies />} />
+          <Route path="/api-keys" element={<ApiKeys />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </AppShell.Main>
 
-        <Content className="app-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/platforms" element={<Platforms />} />
-            <Route path="/proxies" element={<Proxies />} />
-            <Route path="/api-keys" element={<ApiKeys />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </Content>
-
-        <Modal
-          title={t(locale, 'documentation')}
-          open={docOpen}
-          onCancel={() => setDocOpen(false)}
-          footer={null}
-          width={720}
-        >
-          {locale === 'zh' ? <DocZh /> : <DocEn />}
-        </Modal>
-      </Layout>
-    </ConfigProvider>
+      <Modal opened={docOpen} onClose={closeDoc} title={t(locale, 'documentation')} size="lg">
+        {locale === 'zh' ? <DocZh /> : <DocEn />}
+      </Modal>
+    </AppShell>
   )
 }
 
 function DocZh() {
   return (
     <div style={{ lineHeight: 1.8 }}>
-      <Typography.Title level={4}>AI Gateway 使用帮助</Typography.Title>
-      <Typography.Paragraph>
-        <Text strong>AI Gateway</Text> 是一个跨平台 AI 接口聚合与负载均衡工具，支持 OpenAI、Anthropic、Ollama 等多种 AI 平台的统一接入。
-      </Typography.Paragraph>
-      <Divider />
-      <Typography.Title level={5}>第一步：添加 AI 平台</Typography.Title>
-      <Typography.Paragraph>平台是你 AI 模型的来源，比如 OpenAI、Anthropic、NVIDIA 等。每个平台需要配置 API 地址和 API Key。</Typography.Paragraph>
-      <ol>
-        <li>进入「<Text strong>平台</Text>」页面，点击「<Text strong>添加平台</Text>」</li>
-        <li>选择预设平台或手动填写，配置 API Key 后保存</li>
-      </ol>
-      <Typography.Title level={5}>第二步：添加模型</Typography.Title>
-      <Typography.Paragraph>每个平台上可能有多个 AI 模型，你需要把要使用的模型添加进来。</Typography.Paragraph>
-      <ol>
-        <li>进入「<Text strong>模型</Text>」页面，点击「<Text strong>添加模型</Text>」</li>
-        <li>选择平台，选择预设模型或自定义输入模型 ID</li>
-      </ol>
-      <Typography.Title level={5}>第三步：创建虚拟大模型</Typography.Title>
-      <Typography.Paragraph>虚拟大模型的名称即为对外暴露的模型 ID，后端可以挂载多个平台大模型实现负载均衡。默认同时支持 OpenAI 和 Anthropic 协议。</Typography.Paragraph>
-      <ol>
-        <li>进入「<Text strong>虚拟大模型</Text>」页面，点击「新建虚拟大模型」</li>
-        <li>填写名称（即对外模型 ID，如 <Text code>qc480</Text>），添加后端大模型</li>
-      </ol>
-      <Typography.Title level={5}>第四步：创建 API Key</Typography.Title>
-      <Typography.Paragraph>在「API Key」页面创建 API Key，用于 API 访问认证。API Key 全局通用，无需绑定特定虚拟大模型。</Typography.Paragraph>
-      <ol>
-        <li>进入「<Text strong>API Key</Text>」页面，点击「新建 API Key」</li>
-        <li>填写名称，密钥自动生成，请立即复制保存</li>
-      </ol>
-      <Typography.Title level={5}>API 调用方式</Typography.Title>
-      <Typography.Paragraph>假设管理端口为 <Text code>1994</Text>，虚拟大模型名称为 <Text code>qc480</Text>：</Typography.Paragraph>
-      <Text strong>OpenAI 兼容接口：</Text>
+      <Title order={4}>AI Gateway 使用帮助</Title>
+      <Text mt="sm"><Text span fw={600}>AI Gateway</Text> 是一个跨平台 AI 接口聚合与负载均衡工具，支持 OpenAI、Anthropic、Ollama 等多种 AI 平台的统一接入。</Text>
+      <Divider my="md" />
+      <Title order={5}>第一步：添加 AI 平台</Title>
+      <Text>进入「平台」页面，点击「添加平台」，选择预设平台或手动填写，配置 API Key 后保存。</Text>
+      <Title order={5} mt="md">第二步：创建虚拟大模型</Title>
+      <Text>虚拟大模型的名称即为对外暴露的模型 ID，后端可以挂载多个平台大模型实现负载均衡。默认同时支持 OpenAI 和 Anthropic 协议。</Text>
+      <Title order={5} mt="md">第三步：创建 API Key</Title>
+      <Text>在「API Key」页面创建 API Key，用于 API 访问认证。API Key 全局通用，无需绑定特定虚拟大模型。</Text>
+      <Title order={5} mt="md">API 调用方式</Title>
+      <Text>假设管理端口为 <Code>1994</Code>，虚拟大模型名称为 <Code>qc480</Code>：</Text>
+      <Text fw={600} mt="xs">OpenAI 兼容接口：</Text>
       <pre className="code-block">{`POST http://localhost:1994/v1/chat/completions
 Content-Type: application/json
 Authorization: Bearer <your-api-key>
@@ -183,22 +153,18 @@ Authorization: Bearer <your-api-key>
 function DocEn() {
   return (
     <div style={{ lineHeight: 1.8 }}>
-      <Typography.Title level={4}>AI Gateway Help</Typography.Title>
-      <Typography.Paragraph>
-        <Text strong>AI Gateway</Text> is a cross-platform AI API aggregation and load balancing tool.
-      </Typography.Paragraph>
-      <Divider />
-      <Typography.Title level={5}>Step 1: Add an AI Platform</Typography.Title>
-      <Typography.Paragraph>Navigate to "Platforms" page, add a platform with API URL and API Key.</Typography.Paragraph>
-      <Typography.Title level={5}>Step 2: Add Models</Typography.Title>
-      <Typography.Paragraph>Navigate to "Models" page, add models from your platforms.</Typography.Paragraph>
-      <Typography.Title level={5}>Step 3: Create Virtual Models</Typography.Title>
-      <Typography.Paragraph>The virtual model name is the model ID exposed to clients. You can attach multiple backend models for load balancing. Both OpenAI and Anthropic protocols are supported by default.</Typography.Paragraph>
-      <Typography.Title level={5}>Step 4: Create API Keys</Typography.Title>
-      <Typography.Paragraph>Navigate to "API Keys" page to create API keys for access authentication. Keys are globally valid — no need to bind to specific virtual models.</Typography.Paragraph>
-      <Typography.Title level={5}>API Endpoints</Typography.Title>
-      <Typography.Paragraph>Assuming admin port is <Text code>1994</Text>, virtual model name is <Text code>qc480</Text>:</Typography.Paragraph>
-      <Text strong>OpenAI Compatible:</Text>
+      <Title order={4}>AI Gateway Help</Title>
+      <Text mt="sm"><Text span fw={600}>AI Gateway</Text> is a cross-platform AI API aggregation and load balancing tool.</Text>
+      <Divider my="md" />
+      <Title order={5}>Step 1: Add an AI Platform</Title>
+      <Text>Navigate to "Platforms" page, add a platform with API URL and API Key.</Text>
+      <Title order={5} mt="md">Step 2: Create Virtual Models</Title>
+      <Text>The virtual model name is the model ID exposed to clients. Attach multiple backend models for load balancing.</Text>
+      <Title order={5} mt="md">Step 3: Create API Keys</Title>
+      <Text>Navigate to "API Keys" page to create keys for access authentication. Keys are globally valid.</Text>
+      <Title order={5} mt="md">API Endpoints</Title>
+      <Text>Assuming admin port is <Code>1994</Code>, virtual model name is <Code>qc480</Code>:</Text>
+      <Text fw={600} mt="xs">OpenAI Compatible:</Text>
       <pre className="code-block">{`POST http://localhost:1994/v1/chat/completions
 Content-Type: application/json
 Authorization: Bearer <your-api-key>
